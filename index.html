@@ -88,6 +88,7 @@
         #feedback {
             margin-top: 20px;
             font-size: 18px;
+            color: green;
         }
 
         #highScore {
@@ -98,15 +99,43 @@
         #difficultySelect {
             margin-top: 20px;
             font-size: 16px;
+            position: relative;
+            display: inline-block;
         }
 
-        #timeLeft {
-            font-weight: bold;
+        #difficultySelect::after {
+            content: '\25BC';
+            font-size: 12px;
+            color: #333;
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
         }
 
-        #timeLeft,
-        #highScoreValue {
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+            color: #333;
+            width: calc(100%);
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+        }
+
+        #timer {
+            margin-top: 20px;
+            font-size: 18px;
             color: #ffd700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
         }
     </style>
 </head>
@@ -120,7 +149,6 @@
         <div id="feedback"></div>
         <div id="highScore">High Score: <span id="highScoreValue">0</span></div>
         <div id="difficultySelect">
-            Select Difficulty:
             <select id="difficultyLevel">
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
@@ -178,6 +206,7 @@
         function checkGuess(guess) {
             if (guess === targetNumber) {
                 document.getElementById('feedback').innerText = `Congratulations! You guessed the number in ${attempts} attempts.`;
+                document.getElementById('feedback').style.color = 'green';
                 if (attempts < highScores[document.getElementById('difficultyLevel').value] || highScores[document.getElementById('difficultyLevel').value] === 0) {
                     highScores[document.getElementById('difficultyLevel').value] = attempts;
                     document.getElementById('highScoreValue').innerText = highScores[document.getElementById('difficultyLevel').value];
@@ -187,9 +216,11 @@
                 setTimeout(startNewGame, 2000); // Start a new game after 2 seconds
             } else if (guess < targetNumber) {
                 document.getElementById('feedback').innerText = 'Too low! Try again.';
+                document.getElementById('feedback').style.color = 'red';
                 document.getElementById('wrongSound').play();
             } else {
                 document.getElementById('feedback').innerText = 'Too high! Try again.';
+                document.getElementById('feedback').style.color = 'red';
                 document.getElementById('wrongSound').play();
             }
             drawGame();
@@ -204,6 +235,7 @@
                 if (secondsLeft < 0) {
                     clearInterval(timer);
                     document.getElementById('feedback').innerText = 'Time\'s up! Try again.';
+                    document.getElementById('feedback').style.color = 'red';
                     document.getElementById('wrongSound').play();
                     setTimeout(startNewGame, 2000); // Start a new game after 2 seconds
                 }
