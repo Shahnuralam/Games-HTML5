@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Number</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url('https://source.unsplash.com/1600x900/?game');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        #gameContainer {
+            width: 400px;
+            margin: 20px auto;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            0% {
+                border-color: #fff;
+                box-shadow: 0 0 10px 0px #fff;
+            }
+
+            100% {
+                border-color: #ffd700;
+                box-shadow: 0 0 20px 5px #ffd700;
+            }
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 10px;
+            width: calc(100% - 22px);
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        input[type="submit"] {
+            display: block;
+            margin: 20px auto;
+        }
+
+        #feedback {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        #highScore {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        #difficultySelect {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+
+        #timeLeft {
+            font-weight: bold;
+        }
+
+        #timeLeft,
+        #highScoreValue {
+            color: #ffd700;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Guess the Number Game</h1>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="400" height="200"></canvas>
+        <input type="text" id="guessInput" placeholder="Enter your guess (between 1 and 100)">
+        <button onclick="handleInput()">Submit Guess</button>
+        <div id="feedback"></div>
+        <div id="highScore">High Score: <span id="highScoreValue">0</span></div>
+        <div id="difficultySelect">
+            Select Difficulty:
+            <select id="difficultyLevel">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+        <div id="timer">Time Left: <span id="timeLeft"></span></div>
+    </div>
+    <audio id="correctSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+    <audio id="wrongSound" src="https://www.soundjay.com/button/beep-06.wav"></audio>
+    <script>
+        // Game variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let targetNumber;
+        let attempts = 0;
+        let highScores = { easy: 0, medium: 0, hard: 0 };
+        let timer;
+
+        // Function to start a new game
+        function startNewGame() {
+            const difficultyLevel = document.getElementById('difficultyLevel').value;
+            const difficultyRanges = { easy: [1, 50], medium: [1, 100], hard: [1, 150] };
+            const range = difficultyRanges[difficultyLevel];
+            targetNumber = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
+            attempts = 0;
+            drawGame();
+            document.getElementById('feedback').innerText = '';
+            startTimer();
+        }
+
+        // Function to draw the game
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '20px Arial';
+            ctx.fillStyle = '#333';
+            ctx.fillText('Guess the Number:', 10, 30);
+            ctx.fillText(`Attempts: ${attempts}`, 10, 60);
+        }
+
+        // Function to handle player input
+        function handleInput() {
+            const guessInput = document.getElementById('guessInput');
+            const guess = parseInt(guessInput.value);
+            guessInput.value = ''; // Clear input field
+            if (!isNaN(guess)) {
+                attempts++;
+                checkGuess(guess);
+            } else {
+                alert('Please enter a valid number.');
+            }
+        }
+
+        // Function to check the player's guess
+        function checkGuess(guess) {
+            if (guess === targetNumber) {
+                document.getElementById('feedback').innerText = `Congratulations! You guessed the number in ${attempts} attempts.`;
+                if (attempts < highScores[document.getElementById('difficultyLevel').value] || highScores[document.getElementById('difficultyLevel').value] === 0) {
+                    highScores[document.getElementById('difficultyLevel').value] = attempts;
+                    document.getElementById('highScoreValue').innerText = highScores[document.getElementById('difficultyLevel').value];
+                }
+                document.getElementById('correctSound').play();
+                clearInterval(timer); // Stop the timer
+                setTimeout(startNewGame, 2000); // Start a new game after 2 seconds
+            } else if (guess < targetNumber) {
+                document.getElementById('feedback').innerText = 'Too low! Try again.';
+                document.getElementById('wrongSound').play();
+            } else {
+                document.getElementById('feedback').innerText = 'Too high! Try again.';
+                document.getElementById('wrongSound').play();
+            }
+            drawGame();
+        }
+
+        // Function to start the timer
+        function startTimer() {
+            let secondsLeft = 60; // 1 minute timer
+            timer = setInterval(() => {
+                document.getElementById('timeLeft').innerText = secondsLeft;
+                secondsLeft--;
+                if (secondsLeft < 0) {
+                    clearInterval(timer);
+                    document.getElementById('feedback').innerText = 'Time\'s up! Try again.';
+                    document.getElementById('wrongSound').play();
+                    setTimeout(startNewGame, 2000); // Start a new game after 2 seconds
+                }
+            }, 1000); // Update every second
+        }
+
+        // Initial draw
+        startNewGame();
+    </script>
+</body>
+
+</html>
